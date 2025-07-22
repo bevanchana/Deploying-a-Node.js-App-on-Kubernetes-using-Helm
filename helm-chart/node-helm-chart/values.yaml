@@ -9,3 +9,11 @@ service:
 
 resources: {}
 
+
+ingress:
+  enabled: true
+  hosts:
+    - host: myapp.local
+      paths:
+        - path: /
+          pathType: Prefix
