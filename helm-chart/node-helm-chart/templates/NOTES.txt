@@ -1,0 +1,6 @@
+Thank you for installing {{ .Chart.Name }}!
+
+To access your app, run:
+
+  kubectl get all
+
