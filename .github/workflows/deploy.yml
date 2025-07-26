@@ -41,6 +41,14 @@ jobs:
         env:
           KUBECONFIG: ${{ github.workspace }}/kubeconfig.yaml
 
+      - name: Create Kubernetes Secret
+        run: |
+          kubectl create secret generic app-secrets \
+            --from-literal=APP_SECRET_KEY=${{ secrets.APP_SECRET_KEY }} \
+            --namespace default --dry-run=client -o yaml | kubectl apply -f -
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig.yaml
+
       - name: Helm Deploy
         run: helm upgrade --install my-node-app ./helm-chart/node-helm-chart --namespace default
         env:
