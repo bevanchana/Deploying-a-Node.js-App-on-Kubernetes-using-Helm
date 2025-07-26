@@ -9,45 +9,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Docker
-      uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Log in to Docker Hub
-      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-    - name: Build and push Docker image
-      run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/node-helm-app:latest ./node-app
-        docker push ${{ secrets.DOCKER_USERNAME }}/node-helm-app:latest
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/node-helm-app:latest ./node-app
+          docker push ${{ secrets.DOCKER_USERNAME }}/node-helm-app:latest
 
-    - name: Install kubectl
-      run: |
-        curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        chmod +x kubectl
-        sudo mv kubectl /usr/local/bin/
+      - name: Install kubectl & Helm
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
-    - name: Install Helm
-      run: |
-        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Configure Kubeconfig
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" | base64 --decode > kubeconfig.yaml
+          chmod 600 kubeconfig.yaml
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig.yaml
 
-    - name: Set up kubeconfig
-      run: |
-        mkdir -p $HOME/.kube
-        echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
-        chmod 644 $HOME/.kube/config
-      env:
-        KUBECONFIG: $HOME/.kube/config
+      - name: Test Cluster Connection
+        run: kubectl get nodes
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig.yaml
 
-    - name: Verify Kubernetes cluster access
-      run: kubectl get nodes
-      env:
-        KUBECONFIG: $HOME/.kube/config
-
-    - name: Deploy using Helm
-      run: |
-        helm upgrade --install my-node-app ./helm-chart/node-helm-chart --namespace default
-      env:
-        KUBECONFIG: $HOME/.kube/config
+      - name: Helm Deploy
+        run: helm upgrade --install my-node-app ./helm-chart/node-helm-chart --namespace default
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig.yaml
