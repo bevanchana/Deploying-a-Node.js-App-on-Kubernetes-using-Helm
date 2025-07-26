@@ -31,12 +31,8 @@ jobs:
 
       - name: Configure Kubeconfig
         run: |
+          mkdir -p $HOME/.kube
           echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
-        env:
-          KUBECONFIG: $HOME/.kube/config
-
-      - name: Verify cluster access
-        run: kubectl get nodes
         env:
           KUBECONFIG: $HOME/.kube/config
 
