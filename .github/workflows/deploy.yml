@@ -27,14 +27,21 @@ jobs:
         run: |
           curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
           chmod +x ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl
-
           curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
       - name: Configure Kubeconfig
         run: |
-          echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
-          export KUBECONFIG=$PWD/kubeconfig.yaml
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+        env:
+          KUBECONFIG: $HOME/.kube/config
+
+      - name: Verify cluster access
+        run: kubectl get nodes
+        env:
+          KUBECONFIG: $HOME/.kube/config
 
       - name: Helm Deploy
         run: |
           helm upgrade --install my-node-app ./helm-chart/node-helm-chart --namespace default
+        env:
+          KUBECONFIG: $HOME/.kube/config
