@@ -29,15 +29,22 @@ jobs:
           chmod +x ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl
           curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
-      - name: Configure Kubeconfig
+      - name: Set up Kubeconfig
         run: |
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
         env:
           KUBECONFIG: $HOME/.kube/config
 
-      - name: Helm Deploy
+      - name: Verify Cluster Connection
         run: |
-          helm upgrade --install my-node-app ./helm-chart/node-helm-chart --namespace default
+          echo "Testing cluster connection..."
+          kubectl cluster-info
+        env:
+          KUBECONFIG: $HOME/.kube/config
+
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install my-node-app ./helm-chart/node-helm-chart --namespace default --create-namespace
         env:
           KUBECONFIG: $HOME/.kube/config
