@@ -13,6 +13,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ .include "node-helm-chart.fullname" . }}
+                name: {{ include "node-helm-chart.fullname" . }}
                 port:
                   number: 80
