@@ -12,7 +12,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
@@ -25,25 +25,24 @@ jobs:
 
       - name: Install kubectl & Helm
         run: |
-          curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
-          chmod +x ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl && sudo mv kubectl /usr/local/bin/
           curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
-      - name: Set up Kubeconfig
+      - name: Set up kubeconfig
         run: |
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
         env:
           KUBECONFIG: $HOME/.kube/config
 
-      - name: Verify Cluster Connection
-        run: |
-          echo "Testing cluster connection..."
-          kubectl cluster-info
+      - name: Test cluster access
+        run: kubectl get nodes
         env:
           KUBECONFIG: $HOME/.kube/config
 
-      - name: Deploy with Helm
+      - name: Helm Deploy
         run: |
           helm upgrade --install my-node-app ./helm-chart/node-helm-chart --namespace default --create-namespace
         env:
