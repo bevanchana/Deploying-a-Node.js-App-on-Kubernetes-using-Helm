@@ -1,3 +1,5 @@
+fullnameOverride: node-helm-chart
+
 image:
   repository: alvinchana/node-helm-app
   tag: latest
@@ -8,7 +10,6 @@ service:
   port: 80
 
 resources: {}
-
 
 ingress:
   enabled: true
