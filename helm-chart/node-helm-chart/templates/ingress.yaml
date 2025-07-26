@@ -1,11 +1,11 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ .Release.Name }}-ingress
+  name: my-node-app-ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
-  ingressClassName: nginx  # <-- Add this line
+  ingressClassName: nginx
   rules:
     - host: myapp.local
       http:
@@ -14,6 +14,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ include "node-helm-chart.fullname" . }}
+                name: node-helm-chart
                 port:
                   number: 80
